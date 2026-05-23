@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { createGeminiModel } from "@/lib/gemini";
+import { generateWithDeepSeek } from "@/lib/deepseek";
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -19,9 +19,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const model = createGeminiModel();
-    const result = await model.generateContent(String(prompt).trim());
-    let text = result.response.text().trim();
+    let text = await generateWithDeepSeek(String(prompt).trim());
 
     // Strip markdown code blocks jika ada (Gemini kadang membungkusnya)
     text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
     const data = JSON.parse(text);
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Gemini error:", error);
+    console.error("DeepSeek error:", error);
     return NextResponse.json(
       { error: "AI gagal memproses permintaan. Coba ulangi dengan deskripsi yang lebih jelas." },
       { status: 500 }
